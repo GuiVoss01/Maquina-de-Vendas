@@ -13,7 +13,8 @@ trocos = [
     ["2 R$", 2, 10],
     ["1 R$", 1, 10],
     ["50 centavos", 0.5, 10],
-    ["10 centavos", 0.1, 10]
+    ["10 centavos", 0.1, 10],
+    ["1 centavo", 0.01, 40]
 ]
 
 estoqueInicialProdutos = [p[2] for p in produtos]
@@ -120,10 +121,8 @@ def pagamento():
             while troco != 0:
                 troco = round(troco, 2)
                 if n >= len(trocos):
-                    print("Sem troco suficiente, a máquina só trabalha com múltiplos de 10 centavos")
                     break
                 if trocos[n][2] < 0:
-                    print("Falta de troco")
                     exit()
                 if troco < trocos[n][1]:
                     n += 1
@@ -135,7 +134,7 @@ def pagamento():
         contagemTroco()
 
         contadorCompras += 1
-        if contadorCompras % 5 == 0:
+        if contadorCompras % 4 == 0:
             reporEstoque()
 
         while True:
