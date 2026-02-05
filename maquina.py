@@ -13,15 +13,16 @@ trocos = [
     ["2 R$", 2, 10],
     ["1 R$", 1, 10],
     ["50 centavos", 0.5, 10],
-    ["25 centavos", 0.25, 10],
-    ["10 centavos", 0.1, 10],
-    ["5 centavos", 0.05, 10],
-    ["1 centavo", 0.01, 10]
+    ["10 centavos", 0.1, 10]
 ]
+
+estoqueInicialProdutos = [p[2] for p in produtos]
+estoqueInicialTrocos = [t[2] for t in trocos]
 
 listaNomeProdutos = []
 listaPrecoProdutos = []
 listaTroco = []
+contadorCompras = 0
 
 def selecionarmodo():
     '''Comeco do codigo, o user recebe a possibilidade de exec o modo adm ou comprar'''
@@ -89,8 +90,15 @@ def selecionarprodutos():
         print(f"Produtos selecionados: {listaNomeProdutos}")
         print(f'Valor total: {sum(listaPrecoProdutos)}')
 
+def reporEstoque():
+    for i in range(len(produtos)):
+        produtos[i][2] = estoqueInicialProdutos[i]
+    for i in range(len(trocos)):
+        trocos[i][2] = estoqueInicialTrocos[i]
+
 def pagamento():
     '''Função traz o algoritmo do troco'''
+    global contadorCompras
     n = 0
     while True:
         try:
@@ -111,6 +119,9 @@ def pagamento():
         else:
             while troco != 0:
                 troco = round(troco, 2)
+                if n >= len(trocos):
+                    print("Sem troco suficiente, a máquina só trabalha com múltiplos de 10 centavos")
+                    break
                 if trocos[n][2] < 0:
                     print("Falta de troco")
                     exit()
@@ -122,6 +133,10 @@ def pagamento():
                     listaTroco.append(n)
 
         contagemTroco()
+
+        contadorCompras += 1
+        if contadorCompras % 5 == 0:
+            reporEstoque()
 
         while True:
             opcao = input("\n1 - Fazer nova compra\n2 - Encerrar programa\nEscolha: ")
@@ -170,6 +185,7 @@ def modoAdm():
             estoquecadastrado = int(input("qual o estoque do produto cadastrado? "))
             produtoCadastrado.append(estoquecadastrado)
             produtos.append(produtoCadastrado)
+            estoqueInicialProdutos.append(estoquecadastrado)
             listaprodutos()
 
         if adm == "editar":
@@ -182,12 +198,14 @@ def modoAdm():
             listaEditar.append(valoreditado)
             listaEditar.append(estoqueeditado)
             produtos[produtoEditadoIndex][1:3] = listaEditar
+            estoqueInicialProdutos[produtoEditadoIndex] = estoqueeditado
             listaprodutos()
 
         if adm == 'remover':
             remover = int(input("qual o id do produto que você quer remover? "))
             produtoremovidoIndex = remover - 1
             produtos.pop(produtoremovidoIndex)
+            estoqueInicialProdutos.pop(produtoremovidoIndex)
             listaprodutos()
 
         if adm == 'sair':
