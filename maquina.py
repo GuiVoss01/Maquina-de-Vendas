@@ -14,7 +14,7 @@ trocos = [
     ["1 R$", 1, 10],
     ["50 centavos", 0.5, 10],
     ["10 centavos", 0.1, 10],
-    ["1 centavo", 0.01, 40]
+    ["1 centavo", 0.01, 100]
 ]
 
 estoqueInicialProdutos = [p[2] for p in produtos]
@@ -108,10 +108,11 @@ def pagamento():
             print("Valor invalido")
             continue
 
-        troco = valorPagamento - sum(listaPrecoProdutos)
+        total = sum(listaPrecoProdutos)
+        troco = valorPagamento - total
         troco = round(troco, 2)
 
-        if valorPagamento < sum(listaPrecoProdutos):
+        if valorPagamento < total:
             print("Saldo insuficiente")
             continue
 
@@ -130,6 +131,13 @@ def pagamento():
                     troco = troco - trocos[n][1]
                     trocos[n][2] = trocos[n][2] - 1
                     listaTroco.append(n)
+
+        print("\n=== RECIBO ===")
+        for i in range(len(listaNomeProdutos)):
+            print(f"{listaNomeProdutos[i]} - R$ {listaPrecoProdutos[i]}")
+        print(f"Total: R$ {round(total, 2)}")
+        print(f"Pago: R$ {round(valorPagamento, 2)}")
+        print(f"Troco: R$ {round(valorPagamento - total, 2)}")
 
         contagemTroco()
 
