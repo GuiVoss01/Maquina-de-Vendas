@@ -34,6 +34,17 @@ def mostrarCarrinho():
         print(f"{i} - {nome} x{qtd} = R$ {round(preco*qtd,2)}")
     print(f"Total: R$ {round(totalCarrinho(),2)}")
 
+def salvarLog(valorPago, troco):
+    with open("historico.txt", "a", encoding="utf-8") as f:
+        f.write("=== COMPRA ===\n")
+        for item in carrinho:
+            nome, preco, qtd = item
+            f.write(f"{nome} x{qtd} = R$ {round(preco*qtd,2)}\n")
+        f.write(f"Total: R$ {round(totalCarrinho(),2)}\n")
+        f.write(f"Pago: R$ {round(valorPago,2)}\n")
+        f.write(f"Troco: R$ {round(troco,2)}\n")
+        f.write("\n")
+
 def adicionarcarrinho(nome, preco):
     for item in carrinho:
         if item[0] == nome:
@@ -186,6 +197,8 @@ def pagamento():
         mostrarCarrinho()
         print(f"Pago: R$ {round(valorPagamento,2)}")
         print(f"Troco: R$ {round(valorPagamento-total,2)}")
+
+        salvarLog(valorPagamento, valorPagamento-total)
 
         contagemTroco()
 
