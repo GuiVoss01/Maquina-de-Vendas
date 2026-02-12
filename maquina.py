@@ -20,10 +20,38 @@ trocos = [
 estoqueInicialProdutos = [p[2] for p in produtos]
 estoqueInicialTrocos = [t[2] for t in trocos]
 
-listaNomeProdutos = []
-listaPrecoProdutos = []
+carrinho = []
 listaTroco = []
 contadorCompras = 0
+
+def totalCarrinho():
+    return sum(item[1] * item[2] for item in carrinho)
+
+def mostrarCarrinho():
+    print("\n=== CARRINHO ===")
+    for i, item in enumerate(carrinho, start=1):
+        nome, preco, qtd = item
+        print(f"{i} - {nome} x{qtd} = R$ {round(preco*qtd,2)}")
+    print(f"Total: R$ {round(totalCarrinho(),2)}")
+
+def adicionarcarrinho(nome, preco):
+    for item in carrinho:
+        if item[0] == nome:
+            item[2] += 1
+            return
+    carrinho.append([nome, preco, 1])
+
+def removerdocarrinho(indice):
+    item = carrinho[indice]
+    nome = item[0]
+    for produto in produtos:
+        if produto[0] == nome:
+            produto[2] += 1
+            break
+    if item[2] > 1:
+        item[2] -= 1
+    else:
+        carrinho.pop(indice)
 
 def selecionarmodo():
     '''Comeco do codigo, o user recebe a possibilidade de exec o modo adm ou comprar'''
@@ -84,12 +112,28 @@ def selecionarprodutos():
             print("PRODUTO EM FALTA")
             continue
 
-        compraIndex[2] = compraIndex[2] - 1
+        compraIndex[2] -= 1
+        adicionarcarrinho(compraIndex[0], compraIndex[1])
         listaprodutos()
-        listaNomeProdutos.append(compraIndex[0])
-        listaPrecoProdutos.append(compraIndex[1])
-        print(f"Produtos selecionados: {listaNomeProdutos}")
-        print(f'Valor total: {sum(listaPrecoProdutos)}')
+        mostrarCarrinho()
+
+def editarCarrinho():
+    while True:
+        if not carrinho:
+            print("Carrinho vazio")
+            return
+        mostrarCarrinho()
+        escolha = input("Digite o número do item para remover ou 0 para continuar: ")
+        if escolha == '0':
+            return
+        try:
+            indice = int(escolha) - 1
+            if 0 <= indice < len(carrinho):
+                removerdocarrinho(indice)
+            else:
+                print("Item inválido")
+        except:
+            print("Valor inválido")
 
 def reporEstoque():
     for i in range(len(produtos)):
@@ -100,6 +144,13 @@ def reporEstoque():
 def pagamento():
     '''Função traz o algoritmo do troco'''
     global contadorCompras
+    if not carrinho:
+        print("Carrinho vazio")
+        selecionarprodutos()
+        return
+
+    editarCarrinho()
+
     n = 0
     while True:
         try:
@@ -108,9 +159,8 @@ def pagamento():
             print("Valor invalido")
             continue
 
-        total = sum(listaPrecoProdutos)
-        troco = valorPagamento - total
-        troco = round(troco, 2)
+        total = totalCarrinho()
+        troco = round(valorPagamento - total, 2)
 
         if valorPagamento < total:
             print("Saldo insuficiente")
@@ -128,16 +178,14 @@ def pagamento():
                 if troco < trocos[n][1]:
                     n += 1
                 else:
-                    troco = troco - trocos[n][1]
-                    trocos[n][2] = trocos[n][2] - 1
+                    troco -= trocos[n][1]
+                    trocos[n][2] -= 1
                     listaTroco.append(n)
 
         print("\n=== RECIBO ===")
-        for i in range(len(listaNomeProdutos)):
-            print(f"{listaNomeProdutos[i]} - R$ {listaPrecoProdutos[i]}")
-        print(f"Total: R$ {round(total, 2)}")
-        print(f"Pago: R$ {round(valorPagamento, 2)}")
-        print(f"Troco: R$ {round(valorPagamento - total, 2)}")
+        mostrarCarrinho()
+        print(f"Pago: R$ {round(valorPagamento,2)}")
+        print(f"Troco: R$ {round(valorPagamento-total,2)}")
 
         contagemTroco()
 
@@ -148,8 +196,7 @@ def pagamento():
         while True:
             opcao = input("\n1 - Fazer nova compra\n2 - Encerrar programa\nEscolha: ")
             if opcao == '1':
-                listaNomeProdutos.clear()
-                listaPrecoProdutos.clear()
+                carrinho.clear()
                 listaTroco.clear()
                 listaprodutos()
                 selecionarprodutos()
