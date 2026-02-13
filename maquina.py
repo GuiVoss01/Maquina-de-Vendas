@@ -24,11 +24,14 @@ carrinho = []
 listaTroco = []
 contadorCompras = 0
 
+
 def centavos_para_real(valor):
     return f"{valor/100:.2f}"
 
+
 def totalCarrinho():
     return sum(item["preco"] * item["qtd"] for item in carrinho)
+
 
 def mostrarCarrinho():
     print("\n=== CARRINHO ===")
@@ -36,6 +39,7 @@ def mostrarCarrinho():
         total = item["preco"] * item["qtd"]
         print(f"{i} - {item['nome']} x{item['qtd']} = R$ {centavos_para_real(total)}")
     print(f"Total: R$ {centavos_para_real(totalCarrinho())}")
+
 
 def salvarLog(valorPago, troco):
     with open("historico.txt", "a", encoding="utf-8") as f:
@@ -47,6 +51,7 @@ def salvarLog(valorPago, troco):
         f.write(f"Pago: R$ {centavos_para_real(valorPago)}\n")
         f.write(f"Troco: R$ {centavos_para_real(troco)}\n\n")
 
+
 def adicionarcarrinho(nome, preco):
     for item in carrinho:
         if item["nome"] == nome:
@@ -54,77 +59,123 @@ def adicionarcarrinho(nome, preco):
             return
     carrinho.append({"nome": nome, "preco": preco, "qtd": 1})
 
+
 def removerdocarrinho(indice):
     item = carrinho[indice]
     for produto in produtos:
         if produto["nome"] == item["nome"]:
             produto["estoque"] += 1
             break
+
     if item["qtd"] > 1:
         item["qtd"] -= 1
     else:
         carrinho.pop(indice)
 
+
 def listaprodutos():
-    print("MAQUINA DE VENDAS")
+    print("\nMAQUINA DE VENDAS")
     print("===============================")
     for i, p in enumerate(produtos):
         print(f"{i+1}-{p['nome']} - R$ {centavos_para_real(p['preco'])} - estoque {p['estoque']}")
 
+
 def estoqueNotas():
-    print("Estoque notas")
+    print("\nEstoque notas")
     print("===============================")
     for t in trocos:
         print(f"{t['nome']} - estoque {t['estoque']}")
 
-def selecionarmodo():
+
+def reporEstoque():
+    for i in range(len(produtos)):
+        produtos[i]["estoque"] = estoqueInicialProdutos[i]
+
+    for i in range(len(trocos)):
+        trocos[i]["estoque"] = estoqueInicialTrocos[i]
+
+
+def menuPrincipal():
     while True:
-        escolha = int(input("digite a senha para modo adm ou 1 para comprar: "))
-        if escolha == 123:
-            modoAdm()
-            break
-        elif escolha == 1:
-            listaprodutos()
-            selecionarprodutos()
-            break
-        else:
-            print("Senha incorreta")
+        print("\n=== MENU PRINCIPAL ===")
+        print("1 - Comprar")
+        print("2 - Modo administrador")
+        print("3 - Sair")
 
-def selecionarprodutos():
+        escolha = input("Escolha: ")
+
+        if escolha == "1":
+            menuCompra()
+
+        elif escolha == "2":
+            senha = input("Senha: ")
+            if senha == "123":
+                menuAdm()
+            else:
+                print("Senha incorreta")
+
+        elif escolha == "3":
+            exit()
+
+
+def menuCompra():
+    carrinho.clear()
+    listaTroco.clear()
+
     while True:
-        try:
-            compra = int(input("Digite o ID do produto ou 0 para finalizar sua compra: "))
-        except ValueError:
-            print("Valor inválido")
-            continue
-
-        if compra == 0:
-            pagamento()
-            break
-
-        if compra < 1 or compra > len(produtos):
-            print("ID não identificado")
-            continue
-
-        produto = produtos[compra-1]
-
-        if produto["estoque"] <= 0:
-            print("PRODUTO EM FALTA")
-            continue
-
-        produto["estoque"] -= 1
-        adicionarcarrinho(produto["nome"], produto["preco"])
         listaprodutos()
-        mostrarCarrinho()
+        print("\n1 - Selecionar produto")
+        print("2 - Ver carrinho")
+        print("3 - Finalizar compra")
+        print("4 - Voltar")
+
+        escolha = input("Escolha: ")
+
+        if escolha == "1":
+            selecionarProduto()
+
+        elif escolha == "2":
+            editarCarrinho()
+
+        elif escolha == "3":
+            pagamento()
+            return
+
+        elif escolha == "4":
+            return
+
+
+def selecionarProduto():
+    try:
+        compra = int(input("Digite o ID do produto: "))
+    except:
+        return
+
+    if compra < 1 or compra > len(produtos):
+        return
+
+    produto = produtos[compra-1]
+
+    if produto["estoque"] <= 0:
+        print("PRODUTO EM FALTA")
+        return
+
+    produto["estoque"] -= 1
+    adicionarcarrinho(produto["nome"], produto["preco"])
+
 
 def editarCarrinho():
     while True:
         if not carrinho:
+            print("Carrinho vazio")
             return
+
         mostrarCarrinho()
-        escolha = input("Digite o número do item para remover ou 0 para continuar: ")
-        if escolha == '0':
+        escolha = input("Remover item (número) ou 0 para voltar: ")
+
+        if escolha == "0":
             return
+
         try:
             indice = int(escolha) - 1
             if 0 <= indice < len(carrinho):
@@ -132,25 +183,18 @@ def editarCarrinho():
         except:
             pass
 
-def reporEstoque():
-    for i in range(len(produtos)):
-        produtos[i]["estoque"] = estoqueInicialProdutos[i]
-    for i in range(len(trocos)):
-        trocos[i]["estoque"] = estoqueInicialTrocos[i]
 
 def pagamento():
     global contadorCompras
-    if not carrinho:
-        selecionarprodutos()
-        return
 
-    editarCarrinho()
+    if not carrinho:
+        return
 
     while True:
         try:
             valor = float(input("Valor inserido: "))
             valorPagamento = int(round(valor * 100))
-        except ValueError:
+        except:
             continue
 
         total = totalCarrinho()
@@ -165,6 +209,7 @@ def pagamento():
 
         while resto > 0 and n < len(trocos):
             moeda = trocos[n]
+
             if resto >= moeda["valor"] and moeda["estoque"] > 0:
                 resto -= moeda["valor"]
                 moeda["estoque"] -= 1
@@ -178,67 +223,73 @@ def pagamento():
         print(f"Troco: R$ {centavos_para_real(troco)}")
 
         salvarLog(valorPagamento, troco)
-
         contagemTroco()
 
         contadorCompras += 1
+
         if contadorCompras % 4 == 0:
             reporEstoque()
 
-        while True:
-            opcao = input("\n1 - Fazer nova compra\n2 - Encerrar programa\nEscolha: ")
-            if opcao == '1':
-                carrinho.clear()
-                listaTroco.clear()
-                listaprodutos()
-                selecionarprodutos()
-                return
-            elif opcao == '2':
-                exit()
+        input("\nPressione ENTER para continuar...")
+        return
+
 
 def contagemTroco():
     valores = set(listaTroco)
+
     for n in valores:
         qtd = listaTroco.count(n)
         nome = trocos[n]["nome"]
         tipo = "nota" if n < 4 else "moeda"
+
         if qtd > 1:
             print(f"{qtd} {tipo}s de {nome}")
         else:
             print(f"{qtd} {tipo} de {nome}")
-    listaprodutos()
+
     estoqueNotas()
 
-def modoAdm():
-    while True:
-        adm = input("deseja cadastrar, editar, remover um produto ou sair do modo? ").lower()
 
-        if adm == 'cadastrar':
-            nome = input("nome do produto: ")
-            preco = int(round(float(input("valor: ")) * 100))
-            estoque = int(input("estoque: "))
+def menuAdm():
+    while True:
+        print("\n=== MODO ADMIN ===")
+        print("1 - Cadastrar produto")
+        print("2 - Editar produto")
+        print("3 - Remover produto")
+        print("4 - Voltar")
+
+        adm = input("Escolha: ")
+
+        if adm == "1":
+            nome = input("Nome: ")
+            preco = int(round(float(input("Valor: ")) * 100))
+            estoque = int(input("Estoque: "))
+
             produtos.append({"nome": nome, "preco": preco, "estoque": estoque})
             estoqueInicialProdutos.append(estoque)
-            listaprodutos()
 
-        if adm == "editar":
-            editar = int(input("ID do produto: ")) - 1
-            preco = int(round(float(input("novo valor: ")) * 100))
-            estoque = int(input("novo estoque: "))
-            produtos[editar]["preco"] = preco
-            produtos[editar]["estoque"] = estoque
-            estoqueInicialProdutos[editar] = estoque
-            listaprodutos()
+        elif adm == "2":
+            try:
+                editar = int(input("ID: ")) - 1
+                preco = int(round(float(input("Novo valor: ")) * 100))
+                estoque = int(input("Novo estoque: "))
 
-        if adm == 'remover':
-            remover = int(input("ID do produto: ")) - 1
-            produtos.pop(remover)
-            estoqueInicialProdutos.pop(remover)
-            listaprodutos()
+                produtos[editar]["preco"] = preco
+                produtos[editar]["estoque"] = estoque
+                estoqueInicialProdutos[editar] = estoque
+            except:
+                pass
 
-        if adm == 'sair':
-            listaprodutos()
-            selecionarprodutos()
-            break
+        elif adm == "3":
+            try:
+                remover = int(input("ID: ")) - 1
+                produtos.pop(remover)
+                estoqueInicialProdutos.pop(remover)
+            except:
+                pass
 
-selecionarmodo()
+        elif adm == "4":
+            return
+
+
+menuPrincipal()
