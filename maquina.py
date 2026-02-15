@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class MaquinaVendas:
 
     def __init__(self):
@@ -41,11 +44,16 @@ class MaquinaVendas:
         print(f"Total: R$ {self.centavos_para_real(self.totalCarrinho())}")
 
     def salvarLog(self, valorPago, troco):
+        agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
         with open("historico.txt", "a", encoding="utf-8") as f:
             f.write("=== COMPRA ===\n")
+            f.write(f"Data: {agora}\n")
+
             for item in self.carrinho:
                 total = item["preco"] * item["qtd"]
                 f.write(f"{item['nome']} x{item['qtd']} = R$ {self.centavos_para_real(total)}\n")
+
             f.write(f"Total: R$ {self.centavos_para_real(self.totalCarrinho())}\n")
             f.write(f"Pago: R$ {self.centavos_para_real(valorPago)}\n")
             f.write(f"Troco: R$ {self.centavos_para_real(troco)}\n\n")
