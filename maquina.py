@@ -96,6 +96,87 @@ class MaquinaVendas:
         for i in range(len(self.trocos)):
             self.trocos[i]["estoque"] = self.estoqueInicialTrocos[i]
 
+    def calcular_troco(self, troco):
+        resto = troco
+        trocos_usados = []
+
+        for i, moeda in enumerate(self.trocos):
+            while resto >= moeda["valor"] and moeda["estoque"] > 0:
+                resto -= moeda["valor"]
+                moeda["estoque"] -= 1
+                trocos_usados.append(i)
+
+        if resto != 0:
+            for i in trocos_usados:
+                self.trocos[i]["estoque"] += 1
+            return None
+
+        return trocos_usados
+
+    def pagamento(self):
+        if not self.carrinho:
+            return
+
+        while True:
+            try:
+                valor = float(input("Valor inserido: "))
+                valorPagamento = int(round(valor * 100))
+            except:
+                continue
+
+            total = self.totalCarrinho()
+
+            if valorPagamento < total:
+                print("Saldo insuficiente")
+                continue
+
+            troco = valorPagamento - total
+
+            trocos_usados = self.calcular_troco(troco)
+
+            if trocos_usados is None:
+                print("Troco indisponível. Operação cancelada.")
+
+                for item in self.carrinho:
+                    for produto in self.produtos:
+                        if produto["nome"] == item["nome"]:
+                            produto["estoque"] += item["qtd"]
+
+                return
+
+            self.listaTroco = trocos_usados
+
+            print("\n=== RECIBO ===")
+            self.mostrarCarrinho()
+            print(f"Pago: R$ {self.centavos_para_real(valorPagamento)}")
+            print(f"Troco: R$ {self.centavos_para_real(troco)}")
+
+            self.salvarLog(valorPagamento, troco)
+            self.contagemTroco()
+
+            self.contadorCompras += 1
+
+            if self.contadorCompras % 4 == 0:
+                self.reporEstoque()
+
+            input("\nPressione ENTER para continuar...")
+            return
+
+    def contagemTroco(self):
+        valores = set(self.listaTroco)
+
+        for n in valores:
+            qtd = self.listaTroco.count(n)
+            nome = self.trocos[n]["nome"]
+            tipo = "nota" if n < 4 else "moeda"
+
+            if qtd > 1:
+                print(f"{qtd} {tipo}s de {nome}")
+            else:
+                print(f"{qtd} {tipo} de {nome}")
+
+        self.estoqueNotas()
+
     def menuPrincipal(self):
         while True:
             print("\n=== MENU PRINCIPAL ===")
@@ -153,7 +234,7 @@ class MaquinaVendas:
         if compra < 1 or compra > len(self.produtos):
             return
 
-        produto = self.produtos[compra-1]
+        produto = self.produtos[compra - 1]
 
         if produto["estoque"] <= 0:
             print("PRODUTO EM FALTA")
@@ -180,68 +261,6 @@ class MaquinaVendas:
                     self.removerdocarrinho(indice)
             except:
                 pass
-
-    def pagamento(self):
-        if not self.carrinho:
-            return
-
-        while True:
-            try:
-                valor = float(input("Valor inserido: "))
-                valorPagamento = int(round(valor * 100))
-            except:
-                continue
-
-            total = self.totalCarrinho()
-
-            if valorPagamento < total:
-                print("Saldo insuficiente")
-                continue
-
-            troco = valorPagamento - total
-            resto = troco
-            n = 0
-
-            while resto > 0 and n < len(self.trocos):
-                moeda = self.trocos[n]
-
-                if resto >= moeda["valor"] and moeda["estoque"] > 0:
-                    resto -= moeda["valor"]
-                    moeda["estoque"] -= 1
-                    self.listaTroco.append(n)
-                else:
-                    n += 1
-
-            print("\n=== RECIBO ===")
-            self.mostrarCarrinho()
-            print(f"Pago: R$ {self.centavos_para_real(valorPagamento)}")
-            print(f"Troco: R$ {self.centavos_para_real(troco)}")
-
-            self.salvarLog(valorPagamento, troco)
-            self.contagemTroco()
-
-            self.contadorCompras += 1
-
-            if self.contadorCompras % 4 == 0:
-                self.reporEstoque()
-
-            input("\nPressione ENTER para continuar...")
-            return
-
-    def contagemTroco(self):
-        valores = set(self.listaTroco)
-
-        for n in valores:
-            qtd = self.listaTroco.count(n)
-            nome = self.trocos[n]["nome"]
-            tipo = "nota" if n < 4 else "moeda"
-
-            if qtd > 1:
-                print(f"{qtd} {tipo}s de {nome}")
-            else:
-                print(f"{qtd} {tipo} de {nome}")
-
-        self.estoqueNotas()
 
     def menuAdm(self):
         while True:
