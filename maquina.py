@@ -12,6 +12,8 @@ class MaquinaVendas:
             {"nome": "Redbull", "preco": 1399, "estoque": 2}
         ]
 
+        self.produtos_index = {p["nome"]: p for p in self.produtos}
+
         self.trocos = [
             {"nome": "20 R$", "valor": 2000, "estoque": 10},
             {"nome": "10 R$", "valor": 1000, "estoque": 10},
@@ -23,286 +25,164 @@ class MaquinaVendas:
             {"nome": "1 centavo", "valor": 1, "estoque": 100}
         ]
 
-        self.estoqueInicialProdutos = [p["estoque"] for p in self.produtos]
-        self.estoqueInicialTrocos = [t["estoque"] for t in self.trocos]
-
         self.carrinho = []
         self.listaTroco = []
-        self.contadorCompras = 0
 
-    def centavos_para_real(self, valor):
-        return f"{valor/100:.2f}"
+    def reais(self, v): return f"{v/100:.2f}"
 
-    def totalCarrinho(self):
-        return sum(item["preco"] * item["qtd"] for item in self.carrinho)
+    def total(self): return sum(i["preco"] * i["qtd"] for i in self.carrinho)
 
     def mostrarCarrinho(self):
         print("\n=== CARRINHO ===")
-        for i, item in enumerate(self.carrinho, start=1):
-            total = item["preco"] * item["qtd"]
-            print(f"{i} - {item['nome']} x{item['qtd']} = R$ {self.centavos_para_real(total)}")
-        print(f"Total: R$ {self.centavos_para_real(self.totalCarrinho())}")
+        for i, item in enumerate(self.carrinho, 1):
+            print(f"{i} - {item['nome']} x{item['qtd']} = R$ {self.reais(item['preco']*item['qtd'])}")
+        print(f"Total: R$ {self.reais(self.total())}")
 
-    def salvarLog(self, valorPago, troco):
-        agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-
+    def salvarLog(self, pago, troco):
         with open("historico.txt", "a", encoding="utf-8") as f:
-            f.write("=== COMPRA ===\n")
-            f.write(f"Data: {agora}\n")
+            f.write(f"\n=== COMPRA ===\nData: {datetime.now()}\n")
+            for i in self.carrinho:
+                f.write(f"{i['nome']} x{i['qtd']}\n")
+            f.write(f"Total: {self.reais(self.total())}\nPago: {self.reais(pago)}\nTroco: {self.reais(troco)}\n")
 
-            for item in self.carrinho:
-                total = item["preco"] * item["qtd"]
-                f.write(f"{item['nome']} x{item['qtd']} = R$ {self.centavos_para_real(total)}\n")
-
-            f.write(f"Total: R$ {self.centavos_para_real(self.totalCarrinho())}\n")
-            f.write(f"Pago: R$ {self.centavos_para_real(valorPago)}\n")
-            f.write(f"Troco: R$ {self.centavos_para_real(troco)}\n\n")
-
-    def adicionarcarrinho(self, nome, preco):
-        for item in self.carrinho:
-            if item["nome"] == nome:
-                item["qtd"] += 1
+    def addCarrinho(self, nome, preco):
+        for i in self.carrinho:
+            if i["nome"] == nome:
+                i["qtd"] += 1
                 return
         self.carrinho.append({"nome": nome, "preco": preco, "qtd": 1})
 
-    def removerdocarrinho(self, indice):
-        item = self.carrinho[indice]
-        for produto in self.produtos:
-            if produto["nome"] == item["nome"]:
-                produto["estoque"] += 1
+    def removerCarrinho(self, i):
+        item = self.carrinho[i]
+
+        for p in self.produtos:
+            if p["nome"] == item["nome"]:
+                p["estoque"] += 1
                 break
 
         if item["qtd"] > 1:
             item["qtd"] -= 1
         else:
-            self.carrinho.pop(indice)
+            self.carrinho.pop(i)
 
-    def listaprodutos(self):
-        print("\nMAQUINA DE VENDAS")
-        print("===============================")
-        for i, p in enumerate(self.produtos):
-            print(f"{i+1}-{p['nome']} - R$ {self.centavos_para_real(p['preco'])} - estoque {p['estoque']}")
+    def listar(self):
+        print("\nMAQUINA DE VENDAS\n=================")
+        for i, p in enumerate(self.produtos, 1):
+            print(f"{i}-{p['nome']} - R$ {self.reais(p['preco'])} - estoque {p['estoque']}")
 
-    def estoqueNotas(self):
-        print("\nEstoque notas")
-        print("===============================")
-        for t in self.trocos:
-            print(f"{t['nome']} - estoque {t['estoque']}")
+    def calcularTroco(self, troco):
+        resto, usados = troco, []
+        for i, m in enumerate(self.trocos):
+            while resto >= m["valor"] and m["estoque"] > 0:
+                resto -= m["valor"]
+                m["estoque"] -= 1
+                usados.append(i)
 
-    def reporEstoque(self):
-        for i in range(len(self.produtos)):
-            self.produtos[i]["estoque"] = self.estoqueInicialProdutos[i]
-
-        for i in range(len(self.trocos)):
-            self.trocos[i]["estoque"] = self.estoqueInicialTrocos[i]
-
-    def calcular_troco(self, troco):
-        resto = troco
-        trocos_usados = []
-
-        for i, moeda in enumerate(self.trocos):
-            while resto >= moeda["valor"] and moeda["estoque"] > 0:
-                resto -= moeda["valor"]
-                moeda["estoque"] -= 1
-                trocos_usados.append(i)
-
-        if resto != 0:
-            for i in trocos_usados:
+        if resto:
+            for i in usados:
                 self.trocos[i]["estoque"] += 1
             return None
-
-        return trocos_usados
+        return usados
 
     def pagamento(self):
-        if not self.carrinho:
-            return
+        if not self.carrinho: return
 
-        while True:
-            try:
-                valor = float(input("Valor inserido: "))
-                valorPagamento = int(round(valor * 100))
-            except:
-                continue
-
-            total = self.totalCarrinho()
-
-            if valorPagamento < total:
-                print("Saldo insuficiente")
-                continue
-
-            troco = valorPagamento - total
-
-            trocos_usados = self.calcular_troco(troco)
-
-            if trocos_usados is None:
-                print("Troco indisponível. Operação cancelada.")
-
-                for item in self.carrinho:
-                    for produto in self.produtos:
-                        if produto["nome"] == item["nome"]:
-                            produto["estoque"] += item["qtd"]
-
-                return
-
-            self.listaTroco = trocos_usados
-
-            print("\n=== RECIBO ===")
-            self.mostrarCarrinho()
-            print(f"Pago: R$ {self.centavos_para_real(valorPagamento)}")
-            print(f"Troco: R$ {self.centavos_para_real(troco)}")
-
-            self.salvarLog(valorPagamento, troco)
-            self.contagemTroco()
-
-            self.contadorCompras += 1
-
-            if self.contadorCompras % 4 == 0:
-                self.reporEstoque()
-
-            input("\nPressione ENTER para continuar...")
-            return
-
-    def contagemTroco(self):
-        valores = set(self.listaTroco)
-
-        for n in valores:
-            qtd = self.listaTroco.count(n)
-            nome = self.trocos[n]["nome"]
-            tipo = "nota" if n < 4 else "moeda"
-
-            if qtd > 1:
-                print(f"{qtd} {tipo}s de {nome}")
-            else:
-                print(f"{qtd} {tipo} de {nome}")
-
-        self.estoqueNotas()
-
-    def menuPrincipal(self):
-        while True:
-            print("\n=== MENU PRINCIPAL ===")
-            print("1 - Comprar")
-            print("2 - Modo administrador")
-            print("3 - Sair")
-
-            escolha = input("Escolha: ")
-
-            if escolha == "1":
-                self.menuCompra()
-
-            elif escolha == "2":
-                senha = input("Senha: ")
-                if senha == "123":
-                    self.menuAdm()
-                else:
-                    print("Senha incorreta")
-
-            elif escolha == "3":
-                exit()
-
-    def menuCompra(self):
-        self.carrinho.clear()
-        self.listaTroco.clear()
-
-        while True:
-            self.listaprodutos()
-            print("\n1 - Selecionar produto")
-            print("2 - Ver carrinho")
-            print("3 - Finalizar compra")
-            print("4 - Voltar")
-
-            escolha = input("Escolha: ")
-
-            if escolha == "1":
-                self.selecionarProduto()
-
-            elif escolha == "2":
-                self.editarCarrinho()
-
-            elif escolha == "3":
-                self.pagamento()
-                return
-
-            elif escolha == "4":
-                return
-
-    def selecionarProduto(self):
         try:
-            compra = int(input("Digite o ID do produto: "))
+            pago = int(float(input("Valor: ")) * 100)
         except:
             return
 
-        if compra < 1 or compra > len(self.produtos):
+        total = self.total()
+        if pago < total:
+            print("Saldo insuficiente")
             return
 
-        produto = self.produtos[compra - 1]
+        troco = pago - total
+        usados = self.calcularTroco(troco)
 
-        if produto["estoque"] <= 0:
-            print("PRODUTO EM FALTA")
+        if usados is None:
+            print("Sem troco")
+
+            for i in self.carrinho:
+                for p in self.produtos:
+                    if p["nome"] == i["nome"]:
+                        p["estoque"] += i["qtd"]
+
             return
 
-        produto["estoque"] -= 1
-        self.adicionarcarrinho(produto["nome"], produto["preco"])
+        print("\n=== RECIBO ===")
+        self.mostrarCarrinho()
+        print(f"Pago: {self.reais(pago)} | Troco: {self.reais(troco)}")
 
-    def editarCarrinho(self):
+        self.salvarLog(pago, troco)
+        self.carrinho.clear()
+
+    def selecionar(self):
+        try:
+            i = int(input("ID: ")) - 1
+            p = self.produtos[i]
+
+            if p["estoque"] <= 0:
+                print("Sem estoque")
+                return
+
+            p["estoque"] -= 1
+            self.addCarrinho(p["nome"], p["preco"])
+        except:
+            pass
+
+    def menuCompra(self):
+        self.carrinho.clear()
         while True:
-            if not self.carrinho:
-                print("Carrinho vazio")
-                return
+            self.listar()
+            op = input("1-Add 2-Carrinho 3-Pagar 4-Voltar: ")
 
-            self.mostrarCarrinho()
-            escolha = input("Remover item (número) ou 0 para voltar: ")
-
-            if escolha == "0":
-                return
-
-            try:
-                indice = int(escolha) - 1
-                if 0 <= indice < len(self.carrinho):
-                    self.removerdocarrinho(indice)
-            except:
-                pass
+            if op == "1": self.selecionar()
+            elif op == "2": self.mostrarCarrinho()
+            elif op == "3": return self.pagamento()
+            elif op == "4": return
 
     def menuAdm(self):
         while True:
-            print("\n=== MODO ADMIN ===")
-            print("1 - Cadastrar produto")
-            print("2 - Editar produto")
-            print("3 - Remover produto")
-            print("4 - Voltar")
+            op = input("\n1-Add 2-Editar 3-Remover 4-Voltar: ")
 
-            adm = input("Escolha: ")
-
-            if adm == "1":
+            if op == "1":
                 nome = input("Nome: ")
-                preco = int(round(float(input("Valor: ")) * 100))
+                preco = int(float(input("Preço: ")) * 100)
                 estoque = int(input("Estoque: "))
 
-                self.produtos.append({"nome": nome, "preco": preco, "estoque": estoque})
-                self.estoqueInicialProdutos.append(estoque)
+                p = {"nome": nome, "preco": preco, "estoque": estoque}
+                self.produtos.append(p)
 
-            elif adm == "2":
+                self.produtos_index[nome] = p
+
+            elif op == "2":
                 try:
-                    editar = int(input("ID: ")) - 1
-                    preco = int(round(float(input("Novo valor: ")) * 100))
-                    estoque = int(input("Novo estoque: "))
-
-                    self.produtos[editar]["preco"] = preco
-                    self.produtos[editar]["estoque"] = estoque
-                    self.estoqueInicialProdutos[editar] = estoque
+                    i = int(input("ID: ")) - 1
+                    self.produtos[i]["preco"] = int(float(input("Preço: ")) * 100)
+                    self.produtos[i]["estoque"] = int(input("Estoque: "))
                 except:
                     pass
 
-            elif adm == "3":
+            elif op == "3":
                 try:
-                    remover = int(input("ID: ")) - 1
-                    self.produtos.pop(remover)
-                    self.estoqueInicialProdutos.pop(remover)
+                    i = int(input("ID: ")) - 1
+                    self.produtos.pop(i)  
                 except:
                     pass
 
-            elif adm == "4":
+            elif op == "4":
                 return
 
+    def menu(self):
+        while True:
+            op = input("\n1-Comprar 2-Admin 3-Sair: ")
+            if op == "1": self.menuCompra()
+            elif op == "2":
+                if input("Senha: ") == "123":
+                    self.menuAdm()
+            elif op == "3":
+                break
 
-maquina = MaquinaVendas()
-maquina.menuPrincipal()
+
+MaquinaVendas().menu()
