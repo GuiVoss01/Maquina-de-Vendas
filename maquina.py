@@ -25,8 +25,12 @@ class MaquinaVendas:
             {"nome": "1 centavo", "valor": 1, "estoque": 100}
         ]
 
+        self.estoqueInicialProdutos = [p["estoque"] for p in self.produtos]
+        self.estoqueInicialTrocos = [t["estoque"] for t in self.trocos]
+
         self.carrinho = []
         self.listaTroco = []
+        self.contadorCompras = 0
 
     def reais(self, v): return f"{v/100:.2f}"
 
@@ -54,11 +58,7 @@ class MaquinaVendas:
 
     def removerCarrinho(self, i):
         item = self.carrinho[i]
-
-        for p in self.produtos:
-            if p["nome"] == item["nome"]:
-                p["estoque"] += 1
-                break
+        self.produtos_index[item["nome"]]["estoque"] += 1  
 
         if item["qtd"] > 1:
             item["qtd"] -= 1
@@ -79,8 +79,7 @@ class MaquinaVendas:
                 usados.append(i)
 
         if resto:
-            for i in usados:
-                self.trocos[i]["estoque"] += 1
+            for i in usados: self.trocos[i]["estoque"] += 1
             return None
         return usados
 
@@ -102,12 +101,8 @@ class MaquinaVendas:
 
         if usados is None:
             print("Sem troco")
-
             for i in self.carrinho:
-                for p in self.produtos:
-                    if p["nome"] == i["nome"]:
-                        p["estoque"] += i["qtd"]
-
+                self.produtos_index[i["nome"]]["estoque"] += i["qtd"]
             return
 
         print("\n=== RECIBO ===")
@@ -115,17 +110,16 @@ class MaquinaVendas:
         print(f"Pago: {self.reais(pago)} | Troco: {self.reais(troco)}")
 
         self.salvarLog(pago, troco)
+        self.contadorCompras += 1
         self.carrinho.clear()
 
     def selecionar(self):
         try:
             i = int(input("ID: ")) - 1
             p = self.produtos[i]
-
             if p["estoque"] <= 0:
                 print("Sem estoque")
                 return
-
             p["estoque"] -= 1
             self.addCarrinho(p["nome"], p["preco"])
         except:
@@ -153,8 +147,7 @@ class MaquinaVendas:
 
                 p = {"nome": nome, "preco": preco, "estoque": estoque}
                 self.produtos.append(p)
-
-                self.produtos_index[nome] = p
+                self.produtos_index[nome] = p  
 
             elif op == "2":
                 try:
@@ -167,7 +160,8 @@ class MaquinaVendas:
             elif op == "3":
                 try:
                     i = int(input("ID: ")) - 1
-                    self.produtos.pop(i)  
+                    p = self.produtos.pop(i)
+                    self.produtos_index.pop(p["nome"])  
                 except:
                     pass
 
