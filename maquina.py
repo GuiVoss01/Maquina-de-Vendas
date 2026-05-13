@@ -5,11 +5,11 @@ class MaquinaVendas:
 
     def __init__(self):
         self.produtos = [
-            {"nome": "Coca-cola", "preco": 375, "estoque": 2},
-            {"nome": "Pepsi", "preco": 367, "estoque": 5},
-            {"nome": "Monster", "preco": 996, "estoque": 1},
-            {"nome": "Cafe", "preco": 125, "estoque": 100},
-            {"nome": "Redbull", "preco": 1399, "estoque": 2}
+            {"nome": "Coca-cola", "preco": 375, "estoque": 20},
+            {"nome": "Pepsi", "preco": 367, "estoque": 25},
+            {"nome": "Monster", "preco": 996, "estoque": 10},
+            {"nome": "Cafe", "preco": 125, "estoque": 50},
+            {"nome": "Redbull", "preco": 1399, "estoque": 20}
         ]
 
         self.produtos_index = {p["nome"]: p for p in self.produtos}
