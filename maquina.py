@@ -15,14 +15,14 @@ class MaquinaVendas:
         self.produtos_index = {p["nome"]: p for p in self.produtos}
 
         self.trocos = [
-            {"nome": "20 R$", "valor": 2000, "estoque": 10},
-            {"nome": "10 R$", "valor": 1000, "estoque": 10},
-            {"nome": "5 R$", "valor": 500, "estoque": 10},
-            {"nome": "2 R$", "valor": 200, "estoque": 10},
-            {"nome": "1 R$", "valor": 100, "estoque": 10},
-            {"nome": "50 centavos", "valor": 50, "estoque": 10},
-            {"nome": "10 centavos", "valor": 10, "estoque": 10},
-            {"nome": "1 centavo", "valor": 1, "estoque": 100}
+            {"nome": "20 R$", "valor": 2000, "estoque": 15},
+            {"nome": "10 R$", "valor": 1000, "estoque": 15},
+            {"nome": "5 R$", "valor": 500, "estoque": 15},
+            {"nome": "2 R$", "valor": 200, "estoque": 15},
+            {"nome": "1 R$", "valor": 100, "estoque": 15},
+            {"nome": "50 centavos", "valor": 50, "estoque": 15},
+            {"nome": "10 centavos", "valor": 10, "estoque": 15},
+            {"nome": "1 centavo", "valor": 1, "estoque": 80}
         ]
 
         self.estoqueInicialProdutos = [p["estoque"] for p in self.produtos]
