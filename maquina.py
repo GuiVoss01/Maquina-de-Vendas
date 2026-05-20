@@ -173,7 +173,7 @@ class MaquinaVendas:
             op = input("\n1-Comprar 2-Admin 3-Sair: ")
             if op == "1": self.menuCompra()
             elif op == "2":
-                if input("Senha: ") == "123":
+                if input("Senha: ") == "1234":
                     self.menuAdm()
             elif op == "3":
                 break
