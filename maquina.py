@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 
 class MaquinaVendas:
@@ -31,6 +32,9 @@ class MaquinaVendas:
         self.carrinho = []
         self.listaTroco = []
         self.contadorCompras = 0
+
+    def limparTela(self):
+        os.system("cls" if os.name == "nt"else "clear")
 
     def reais(self, v): return f"{v/100:.2f}"
 
@@ -170,7 +174,10 @@ class MaquinaVendas:
 
     def menu(self):
         while True:
-            op = input("\n1-Comprar 2-Admin 3-Sair: ")
+            self.limparTela()
+
+            print("=== MENU PRINCIPAL ===")
+            op = input("\n1-Comprar\n2-Admin\n3-Sair\n\nEscolha: ")
             if op == "1": self.menuCompra()
             elif op == "2":
                 if input("Senha: ") == "1234":
